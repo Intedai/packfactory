@@ -19,7 +19,7 @@ pub enum Commands {
     New(NewArgs),
     /// Build the current pack template
     Build,
-    /// Remove the target directory
+    /// Remove the pack
     Clean
 }
 
