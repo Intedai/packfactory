@@ -21,14 +21,12 @@ impl Manifest {
         return &self.pack.name;
     }
 
-    #[allow(dead_code)] // Not used for now
     pub fn description(&self) -> &str {
         return &self.pack.description;
     }
 }
 
 fn write_manifest(path: &Path, name: &str, description: &str) -> anyhow::Result<()>{
-
     let manifest =  Manifest {
         pack: Pack {
             name: name.to_string(),
@@ -41,7 +39,6 @@ fn write_manifest(path: &Path, name: &str, description: &str) -> anyhow::Result<
 }
 
 pub fn parse_manifest(path: &Path) -> anyhow::Result<Manifest> {
-
     if !path.exists() {
         anyhow::bail!("could not find `{}`", path.display())
     }
@@ -49,11 +46,14 @@ pub fn parse_manifest(path: &Path) -> anyhow::Result<Manifest> {
     let manifest = fs::read_to_string(path)?;
     let manifest: Manifest = toml::from_str(&manifest)?;
 
+    if manifest.name().contains(std::path::is_separator) {
+        anyhow::bail!("name must be a non-nested directory")
+    }
+
     Ok(manifest)
 }
 
 pub fn create_new_template(path: &Path) -> anyhow::Result<()> {
-    
     if path.exists() {
         anyhow::bail!("destination `{}` already exists\n\nRemove the directory and try again", path.display())
     }

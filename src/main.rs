@@ -7,12 +7,11 @@ mod args;
 use args::{PackFactoryArgs, Commands};
 
 fn main() -> anyhow::Result<()>{
-
     let args: PackFactoryArgs = PackFactoryArgs::parse();
 
     match &args.command {
         Commands::New( args ) => template::create_new_template(&args.path)?,
-        Commands::Build => todo!(),
+        Commands::Build => pack::build()?,
         Commands::Clean => pack::clean()?
     }
 
