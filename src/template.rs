@@ -1,7 +1,56 @@
 use std::{fs, path::Path};
 use include_dir::{include_dir, Dir};
+use serde::{Serialize, Deserialize};
 
 static TEMPLATE: Dir = include_dir!("$CARGO_MANIFEST_DIR/template");
+pub const MANIFEST_FILENAME: &str = "Factory.toml";
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Manifest {
+    pack: Pack
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Pack {
+    name: String,
+    description: String
+}
+
+impl Manifest {
+    pub fn name(&self) -> &str {
+        return &self.pack.name;
+    }
+
+    #[allow(dead_code)] // Not used for now
+    pub fn description(&self) -> &str {
+        return &self.pack.description;
+    }
+}
+
+fn write_manifest(path: &Path, name: &str, description: &str) -> anyhow::Result<()>{
+
+    let manifest =  Manifest {
+        pack: Pack {
+            name: name.to_string(),
+            description: description.to_string()
+        }
+    };
+
+    std::fs::write(path.join(MANIFEST_FILENAME), toml::to_string_pretty(&manifest).unwrap())?; 
+    Ok(())
+}
+
+pub fn parse_manifest(path: &Path) -> anyhow::Result<Manifest> {
+
+    if !path.exists() {
+        anyhow::bail!("could not find `{}`", path.display())
+    }
+    
+    let manifest = fs::read_to_string(path)?;
+    let manifest: Manifest = toml::from_str(&manifest)?;
+
+    Ok(manifest)
+}
 
 pub fn create_new_template(path: &Path) -> anyhow::Result<()> {
     
@@ -11,14 +60,12 @@ pub fn create_new_template(path: &Path) -> anyhow::Result<()> {
 
     fs::create_dir_all(path)?;
     TEMPLATE.extract(path)?;
-    
-    let mut manifest = toml_edit::DocumentMut::new();
-    
-    manifest["pack"] = toml_edit::table();
-    manifest["pack"]["name"] = toml_edit::value(path.file_name().unwrap().to_str().unwrap());
-    manifest["pack"]["description"] = toml_edit::value("&9&lChange me");
 
-    std::fs::write(path.join("Factory.toml"), manifest.to_string())?;
+    let name = path.file_name().unwrap().to_str().unwrap();
+
+    write_manifest(path, name, "A Minecraft texture pack")?;
+
+    println!("Created `{}` template", name);
 
     Ok(())
 }
