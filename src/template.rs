@@ -12,7 +12,13 @@ pub fn create_new_template(path: &Path) -> anyhow::Result<()> {
     fs::create_dir_all(path)?;
     TEMPLATE.extract(path)?;
     
-    // TODO: create toml here (maybe in a diff fn)
+    let mut manifest = toml_edit::DocumentMut::new();
+    
+    manifest["pack"] = toml_edit::table();
+    manifest["pack"]["name"] = toml_edit::value(path.file_name().unwrap().to_str().unwrap());
+    manifest["pack"]["description"] = toml_edit::value("&9&lChange me");
+
+    std::fs::write(path.join("Factory.toml"), manifest.to_string())?;
 
     Ok(())
 }
